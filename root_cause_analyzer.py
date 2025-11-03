@@ -62,15 +62,53 @@ class RootCauseAnalyzer:
         analysis['spending_trends'] = spending_analysis
         
         # Analyze engagement behavior
-        engagement_analysis = self._analyze_engagement(
-            user_data.get('engagement_behavior', {})
-        )
+        # Handle both flat structure (new) and nested structure (old)
+        engagement_data = user_data.get('engagement_behavior', {})
+        if not engagement_data:
+            # Build from flat structure
+            engagement_data = {
+                'app_opens': user_data.get('total_app_opens_90d', 0),
+                'offer_clicks': user_data.get('offer_clicks_90d', 0),
+                'offers_shown': user_data.get('offer_views_90d', 0),
+                'offers_accepted': user_data.get('offers_accepted_6m', 0),
+                'redemptions': user_data.get('offers_accepted_6m', 0),  # Approximation
+                'last_login': None  # Not available in flat structure
+            }
+        
+        engagement_analysis = self._analyze_engagement(engagement_data)
         analysis['engagement_metrics'] = engagement_analysis
         
         # Analyze offer history
-        offer_analysis = self._analyze_offer_history(
-            user_data.get('offer_history', [])
-        )
+        # Handle both nested offer_history (old) and flat structure (new)
+        offer_history = user_data.get('offer_history', [])
+        if not offer_history:
+            # Build summary from flat structure metrics
+            offers_shown = user_data.get('offers_shown_6m', 0)
+            offers_accepted = user_data.get('offers_accepted_6m', 0)
+            acceptance_rate = user_data.get('historical_acceptance_rate', 0)
+            last_offer_domain = user_data.get('last_offer_domain', '')
+            preferred_domain_1 = user_data.get('preferred_domain_1', '')
+            preferred_domain_2 = user_data.get('preferred_domain_2', '')
+            
+            # Create synthetic analysis from flat metrics
+            offer_analysis = {
+                'total_offers_received': offers_shown,
+                'total_accepted': offers_accepted,
+                'acceptance_rate': acceptance_rate * 100 if acceptance_rate <= 1 else acceptance_rate,
+                'domain_performance': {},
+                'preferred_domains': [d for d in [preferred_domain_1, preferred_domain_2] if d]
+            }
+            
+            # Add last offer domain if available
+            if last_offer_domain and last_offer_domain != 'N/A':
+                offer_analysis['domain_performance'][last_offer_domain] = {
+                    'total_offers': 1,
+                    'accepted': 0,
+                    'acceptance_rate': 0
+                }
+        else:
+            offer_analysis = self._analyze_offer_history(offer_history)
+        
         analysis['offer_performance'] = offer_analysis
         
         # Step 1: Generate rule-based insights (fast, quantitative)
@@ -295,6 +333,10 @@ class RootCauseAnalyzer:
         insights = []
         domain = ml_recommendation.get('domain', 'general')
         
+        # Extract user profile data (now flat structure)
+        preferred_domain_1 = user_data.get('preferred_domain_1', '')
+        preferred_domain_2 = user_data.get('preferred_domain_2', '')
+        
         # Spending insights
         trend = spending_analysis.get('trend')
         percentage_change = spending_analysis.get('trend_percentage', 0)
@@ -338,9 +380,19 @@ class RootCauseAnalyzer:
                 f"ensure this offer is highly relevant."
             )
         
-        # Domain preference insights
-        preferred_domains = offer_analysis.get('preferred_domains', [])
-        if domain in preferred_domains:
+        # Domain preference insights from user profile
+        preferred_domain_1 = user_data.get('preferred_domain_1', '')
+        preferred_domain_2 = user_data.get('preferred_domain_2', '')
+        preferred_domains_user = [d for d in [preferred_domain_1, preferred_domain_2] if d]
+        
+        # Check both profile and historical offer preferences
+        preferred_domains_offer = offer_analysis.get('preferred_domains', [])
+        
+        if domain.lower() in [d.lower() for d in preferred_domains_user]:
+            insights.append(
+                f"{domain} is one of user's preferred categories based on their spending profile."
+            )
+        elif domain in preferred_domains_offer:
             insights.append(
                 f"{domain} is among user's preferred categories based on past offer acceptance."
             )
@@ -452,7 +504,18 @@ class RootCauseAnalyzer:
     ) -> str:
         """Build a comprehensive prompt for LLM analysis"""
         
-        profile = user_data.get('profile', {})
+        # Extract flat user data structure
+        name = user_data.get('name', 'Unknown')
+        segment = user_data.get('segment', 'Standard')
+        tenure_years = user_data.get('tenure_years', 0)
+        age = user_data.get('age', 'N/A')
+        gender = user_data.get('gender', 'N/A')
+        location = user_data.get('location', 'N/A')
+        persona = user_data.get('persona', 'N/A')
+        customer_lifecycle_stage = user_data.get('customer_lifecycle_stage', 'N/A')
+        churn_risk_score = user_data.get('churn_risk_score', 0)
+        
+        # Get transaction history if available
         transactions = user_data.get('transaction_history', [])
         domain = ml_recommendation.get('domain', 'general')
         
@@ -466,14 +529,20 @@ class RootCauseAnalyzer:
         txn_summary = "\n".join([
             f"  - {t.get('date', 'N/A')}: ${t.get('amount', 0):.2f} at {t.get('merchant', 'Unknown')} ({t.get('category', 'N/A')})"
             for t in recent_txns
-        ])
+        ]) if recent_txns else "No recent transactions available"
         
         prompt = f"""Analyze this American Express card member's behavior and provide deep insights:
 
 **USER PROFILE:**
-- Name: {profile.get('name', 'Unknown')}
-- Segment: {profile.get('segment', 'Standard')}
-- Account Age: {profile.get('tenure_months', 0)} months
+- Name: {name}
+- Segment: {segment}
+- Account Age: {tenure_years} years
+- Age: {age}
+- Gender: {gender}
+- Location: {location}
+- Persona: {persona}
+- Lifecycle Stage: {customer_lifecycle_stage}
+- Churn Risk Score: {churn_risk_score}
 
 **ML RECOMMENDATION:**
 - Target Category: {domain}

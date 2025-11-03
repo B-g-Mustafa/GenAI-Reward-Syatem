@@ -78,11 +78,39 @@ class OfferGenerator:
     ) -> str:
         """Build the prompt for the LLM"""
         
-        # Extract user information
+        # Extract user information (flat structure)
         user_id = user_data.get('user_id', 'Unknown')
-        user_name = user_data.get('profile', {}).get('name', 'Valued Card Member')
-        segment = user_data.get('profile', {}).get('segment', 'Standard')
-        tenure = user_data.get('profile', {}).get('tenure_months', 0)
+        user_name = user_data.get('name', 'Valued Card Member')
+        segment = user_data.get('segment', 'Standard')
+        tenure_years = user_data.get('tenure_years', 0)
+        age = user_data.get('age', 'N/A')
+        gender = user_data.get('gender', 'N/A')
+        location = user_data.get('location', 'N/A')
+        persona = user_data.get('persona', 'N/A')
+        card_type = user_data.get('card_type', 'Standard')
+        customer_lifecycle_stage = user_data.get('customer_lifecycle_stage', 'N/A')
+        churn_risk_score = user_data.get('churn_risk_score', 0)
+        
+        # Extract spending and engagement metrics
+        total_transactions_12m = user_data.get('total_transactions_12m', 0)
+        total_spend_12m = user_data.get('total_spend_12m', 0)
+        avg_transaction_amount = user_data.get('avg_transaction_amount', 0)
+        recency_days = user_data.get('recency_days', 0)
+        frequency_30d = user_data.get('frequency_30d', 0)
+        monetary_30d = user_data.get('monetary_30d', 0)
+        
+        # Engagement metrics
+        email_open_rate = user_data.get('email_open_rate', 0)
+        total_app_opens_90d = user_data.get('total_app_opens_90d', 0)
+        offer_views_90d = user_data.get('offer_views_90d', 0)
+        offer_clicks_90d = user_data.get('offer_clicks_90d', 0)
+        
+        # Offer history
+        offers_shown_6m = user_data.get('offers_shown_6m', 0)
+        offers_accepted_6m = user_data.get('offers_accepted_6m', 0)
+        historical_acceptance_rate = user_data.get('historical_acceptance_rate', 0)
+        days_since_last_offer = user_data.get('days_since_last_offer', 999)
+        last_offer_domain = user_data.get('last_offer_domain', 'N/A')
         
         # Extract behavioral insights
         insights = behavioral_analysis.get('insights', [])
@@ -92,10 +120,20 @@ class OfferGenerator:
         spending_trends = behavioral_analysis.get('spending_trends', {})
         engagement = behavioral_analysis.get('engagement_metrics', {})
         
+        # Separate policies and merchant data
+        policies = []
+        merchant_info = ""
+        
+        for p in relevant_policies:
+            if p['metadata'].get('type') == 'merchants':
+                merchant_info = p['content']
+            else:
+                policies.append(p)
+        
         # Format policies
         policy_context = "\n\n".join([
             f"Policy: {p['metadata'].get('type', 'general')}\n{p['content']}"
-            for p in relevant_policies
+            for p in policies
         ])
         
         # Build comprehensive prompt
@@ -104,8 +142,35 @@ class OfferGenerator:
 **USER PROFILE:**
 - User ID: {user_id}
 - Name: {user_name}
+- Age: {age}
+- Gender: {gender}
+- Location: {location}
 - Segment: {segment}
-- Account Tenure: {tenure} months
+- Card Type: {card_type}
+- Account Tenure: {tenure_years} years
+- Persona: {persona}
+- Lifecycle Stage: {customer_lifecycle_stage}
+- Churn Risk: {churn_risk_score}
+
+**SPENDING PATTERNS (Last 12 Months):**
+- Total Transactions: {total_transactions_12m}
+- Total Spend: ${total_spend_12m:,.2f}
+- Avg Transaction: ${avg_transaction_amount:.2f}
+- Recency: {recency_days} days since last transaction
+- Recent Activity: {frequency_30d} transactions in last 30 days (${monetary_30d:,.2f})
+
+**ENGAGEMENT METRICS:**
+- Email Open Rate: {email_open_rate:.1%}
+- App Opens (90d): {total_app_opens_90d}
+- Offer Views (90d): {offer_views_90d}
+- Offer Clicks (90d): {offer_clicks_90d}
+
+**OFFER HISTORY:**
+- Offers Shown (6m): {offers_shown_6m}
+- Offers Accepted (6m): {offers_accepted_6m}
+- Historical Acceptance Rate: {historical_acceptance_rate:.1%}
+- Days Since Last Offer: {days_since_last_offer}
+- Last Offer Domain: {last_offer_domain}
 
 **BEHAVIORAL ANALYSIS:**
 ML Recommendation: Target {domain} category with {confidence:.0%} confidence
@@ -124,6 +189,9 @@ Engagement Level: {engagement.get('engagement_level', 'unknown')}
 
 **APPLICABLE POLICIES AND CONSTRAINTS:**
 {policy_context}
+
+**PARTNER MERCHANTS FOR {domain.upper()}:**
+{merchant_info if merchant_info else "General merchant network available"}
 
 **YOUR TASK:**
 Generate a personalized offer that:
@@ -145,9 +213,27 @@ Generate a personalized offer that:
     "expiration_days": 30-60 days (integer),
     "minimum_spend": Minimum spend requirement in dollars (integer),
     "category_restrictions": ["list", "of", "specific", "eligible", "categories"],
+    "featured_merchants": [
+        {{
+            "merchant_name": "Merchant Name",
+            "merchant_category": "Specific category",
+            "merchant_id": "MERCH_ID (from partner list above)",
+            "merchant_type": "online|in-store|both"
+        }}
+    ],
     "reasoning": "2-3 sentence explanation of why this offer is optimal for this user based on their behavior",
     "policy_compliance_notes": ["list of policies verified and how offer complies"]
 }}
+
+**CRITICAL MERCHANT SELECTION RULES:**
+1. Select ONLY 2-4 merchants (not all merchants from the category)
+2. Choose the most recognizable and popular merchants that fit the user's profile
+3. Include merchant names in the offer_description and call_to_action
+4. Ensure merchant_id matches exactly from the partner list above
+5. Do NOT list all merchants - be selective and strategic
+
+Example good selection for Electronics: ["Best Buy", "Apple Store"] ✓
+Example bad selection: Listing all 15+ electronics merchants ✗
 
 Generate the offer now:"""
         
@@ -208,6 +294,18 @@ Generate the offer now:"""
             offer_data['ml_confidence'] = ml_recommendation.get('confidence_score', 0)
             offer_data['domain'] = ml_recommendation.get('domain')
             offer_data['generated_at'] = pd.Timestamp.now().isoformat()
+            
+            # Validate and limit merchant count (should be 2-4 merchants only)
+            featured_merchants = offer_data.get('featured_merchants', [])
+            if len(featured_merchants) > 4:
+                print(f"Warning: LLM included {len(featured_merchants)} merchants, truncating to 4")
+                print(f"Full list: {[m.get('merchant_name') for m in featured_merchants]}")
+                offer_data['featured_merchants'] = featured_merchants[:4]
+                offer_data['validation_warning'] = f"Merchant list truncated from {len(featured_merchants)} to 4"
+            elif len(featured_merchants) < 2:
+                print(f"Warning: Only {len(featured_merchants)} merchants included, expected 2-4")
+                if len(featured_merchants) == 0:
+                    offer_data['validation_warning'] = "No merchants included in offer"
             
             # Validate required fields
             required_fields = [

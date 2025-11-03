@@ -107,14 +107,21 @@ class GenAIReasoner:
             n_results=5
         )
         
+        # Retrieve merchant data for the domain
+        merchant_data = self.policy_rag.retrieve_relevant_policies(
+            query=f"{domain} partner merchants",
+            domain=domain,
+            n_results=1
+        )
+        
         # Always include compliance policies
         compliance_policies = self.policy_rag.retrieve_relevant_policies(
             query="compliance regulatory requirements",
             n_results=2
         )
         
-        all_policies = relevant_policies + compliance_policies
-        print(f"  ✓ Retrieved {len(all_policies)} relevant policies")
+        all_policies = relevant_policies + merchant_data + compliance_policies
+        print(f"  ✓ Retrieved {len(all_policies)} relevant policies and merchant data")
         
         # Step 3: Generate Personalized Offer using LLM
         print("\n🤖 Step 3: Generating personalized offer with LLM...")
@@ -181,11 +188,13 @@ class GenAIReasoner:
     ) -> str:
         """Build query for RAG policy retrieval"""
         
-        segment = user_data.get('profile', {}).get('segment', 'standard')
+        # Extract from flat structure
+        segment = user_data.get('segment', 'standard')
+        card_type = user_data.get('card_type', 'Standard')
         spending_trend = behavioral_analysis.get('spending_trends', {}).get('trend', 'stable')
         
         query = f"""
-        {domain} category offer for {segment} segment card member.
+        {domain} category offer for {segment} segment card member with {card_type} card.
         Spending trend: {spending_trend}.
         Need offer terms, eligibility, and merchant requirements.
         """

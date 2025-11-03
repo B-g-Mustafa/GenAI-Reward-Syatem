@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import Dict, List, Any, Optional
 from datetime import datetime
+from decimal import Decimal
 import json
 import os
 
@@ -42,20 +43,49 @@ user_store = None
 
 # ==================== Request/Response Models ====================
 
-class MLModelOutput(BaseModel):
-    """ML Model Output - The only input required"""
+class MLPrediction(BaseModel):
+    """Single ML Model Prediction"""
     user_id: str = Field(..., description="Card Member identifier")
-    offer_flag: bool = Field(..., description="Whether to trigger an offer now")
-    domain: str = Field(..., description="Category: Travel, Dining, Retail, Entertainment")
+    offer_flag: int = Field(..., description="Whether to trigger an offer (0 or 1)")
+    domain: str = Field(..., description="Category: Travel, Business Services, Retail, Electronics, Dining, Entertainment")
     confidence_score: float = Field(..., ge=0, le=1, description="Probability of offer acceptance/lift")
+    pred_version: Optional[str] = Field(None, description="Model version")
+    prediction_timestamp: Optional[str] = Field(None, description="When prediction was made")
     
     class Config:
         schema_extra = {
             "example": {
-                "user_id": "USR001",
-                "offer_flag": True,
-                "domain": "Travel",
-                "confidence_score": 0.85
+                "user_id": "USER_000000",
+                "offer_flag": 1,
+                "domain": "Electronics",
+                "confidence_score": 0.9588919271748322,
+                "pred_version": "v1",
+                "prediction_timestamp": "2025-10-28T10:28:16.506594"
+            }
+        }
+
+
+class MLModelOutput(BaseModel):
+    """ML Model Batch Output - Accepts array of predictions"""
+    total_users: Optional[int] = Field(None, description="Total number of users processed")
+    predictions: List[MLPrediction] = Field(..., description="Array of user predictions")
+    processing_time_seconds: Optional[float] = Field(None, description="Time taken for ML processing")
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "total_users": 1,
+                "predictions": [
+                    {
+                        "user_id": "USER_000000",
+                        "offer_flag": 1,
+                        "domain": "Electronics",
+                        "confidence_score": 0.9588919271748322,
+                        "pred_version": "v1",
+                        "prediction_timestamp": "2025-10-28T10:28:16.506594"
+                    }
+                ],
+                "processing_time_seconds": 0.037884
             }
         }
 
@@ -119,7 +149,7 @@ async def startup_event():
         
         print("✅ API Server initialized successfully")
         print(f"📚 Model: {Config.OPENROUTER_MODEL}")
-        print(f"🌐 API Documentation: http://localhost:8000/docs")
+        print(f"🌐 API Documentation: http://localhost:9000/docs")
         print("=" * 80)
         
     except Exception as e:
@@ -187,73 +217,110 @@ async def get_policies():
         raise HTTPException(status_code=500, detail=f"Error retrieving policies: {str(e)}")
 
 
-@app.post("/generate-offer", response_model=OfferResponse)
+@app.post("/generate-offer", response_model=List[OfferResponse])
 async def generate_offer(
     request: GenerateOfferRequest,
     background_tasks: BackgroundTasks
 ):
     """
-    Generate personalized offer for a user
+    Generate personalized offers for users from ML predictions
     
-    Accepts only ML model output:
-    - user_id: Card member identifier
-    - offer_flag: Whether to trigger an offer
-    - domain: Category (Travel, Dining, Retail, Entertainment)
-    - confidence_score: Probability of offer acceptance
-    
-    User data is automatically retrieved from the internal data store.
+    Accepts ML model output with predictions array:
+    - Each prediction contains: user_id, offer_flag, domain, confidence_score
+    - User data is automatically retrieved from PostgreSQL database
+    - Only processes users with offer_flag=1
     """
     
     if reasoner is None or user_store is None:
         raise HTTPException(status_code=503, detail="System not initialized")
     
     try:
-        ml_output = request.ml_output.dict()
-        user_id = ml_output['user_id']
+        predictions = request.ml_output.predictions
+        results = []
         
-        # Retrieve user data from store
-        user_data = user_store.get_user_data(user_id)
-        
-        if user_data is None:
-            raise HTTPException(
-                status_code=404,
-                detail=f"User {user_id} not found in data store"
-            )
+        print(f"\n📥 Received {len(predictions)} prediction(s)")
         
         # Update reasoner's LLM insights setting if needed
         if request.use_llm_insights != reasoner.root_cause_analyzer.use_llm_insights:
             reasoner.root_cause_analyzer.use_llm_insights = request.use_llm_insights
         
-        # Generate offer
-        print(f"\n📥 Received request for user: {user_id}")
-        print(f"   Domain: {ml_output['domain']}")
-        print(f"   Confidence: {ml_output['confidence_score']:.1%}")
-        print(f"   LLM Insights: {'Enabled' if request.use_llm_insights else 'Disabled'}")
+        # Process each prediction
+        for idx, prediction in enumerate(predictions, 1):
+            pred_dict = prediction.dict()
+            user_id = pred_dict['user_id']
+            offer_flag = pred_dict['offer_flag']
+            
+            print(f"\n[{idx}/{len(predictions)}] Processing user: {user_id}")
+            
+            # Skip if offer_flag is 0 (no offer needed)
+            if offer_flag == 0:
+                print(f"   ⏭️  Skipping - offer_flag=0")
+                results.append({
+                    "success": False,
+                    "user_id": user_id,
+                    "timestamp": datetime.now().isoformat(),
+                    "recommendation": "no_offer_needed",
+                    "error": "ML model indicated no offer needed (offer_flag=0)"
+                })
+                continue
+            
+            # Retrieve user data from PostgreSQL
+            user_data = user_store.get_user_data(user_id)
+            
+            if user_data is None:
+                print(f"   ❌ User not found in database")
+                results.append({
+                    "success": False,
+                    "user_id": user_id,
+                    "timestamp": datetime.now().isoformat(),
+                    "recommendation": "user_not_found",
+                    "error": f"User {user_id} not found in database"
+                })
+                continue
+            
+            # Generate offer
+            print(f"   Domain: {pred_dict['domain']}")
+            print(f"   Confidence: {pred_dict['confidence_score']:.1%}")
+            print(f"   LLM Insights: {'Enabled' if request.use_llm_insights else 'Disabled'}")
+            
+            try:
+                response = reasoner.process_ml_recommendation(user_data, pred_dict)
+                
+                # Add success flag
+                response['success'] = response.get('offer', {}).get('success', False)
+                
+                # Schedule background task to save offer (optional)
+                if response['success']:
+                    background_tasks.add_task(
+                        save_offer_to_file,
+                        user_id,
+                        response
+                    )
+                
+                results.append(response)
+                print(f"   ✅ Offer generated successfully")
+                
+            except Exception as e:
+                print(f"   ❌ Error generating offer: {e}")
+                results.append({
+                    "success": False,
+                    "user_id": user_id,
+                    "timestamp": datetime.now().isoformat(),
+                    "recommendation": "error",
+                    "error": str(e)
+                })
         
-        response = reasoner.process_ml_recommendation(user_data, ml_output)
+        print(f"\n✅ Processed {len(results)} users")
+        print(f"   Successful: {sum(1 for r in results if r.get('success'))}")
+        print(f"   Failed: {sum(1 for r in results if not r.get('success'))}")
         
-        # Add success flag
-        response['success'] = response.get('offer', {}).get('success', False)
+        return results
         
-        # Schedule background task to save offer (optional)
-        if response['success']:
-            background_tasks.add_task(
-                save_offer_to_file,
-                user_id,
-                response
-            )
-        
-        print(f"✅ Offer generated for {user_id}")
-        
-        return response
-        
-    except HTTPException:
-        raise
     except Exception as e:
-        print(f"❌ Error generating offer: {e}")
+        print(f"❌ Error processing predictions: {e}")
         raise HTTPException(
             status_code=500,
-            detail=f"Error generating offer: {str(e)}"
+            detail=f"Error processing predictions: {str(e)}"
         )
 
 
@@ -292,63 +359,111 @@ async def batch_generate_offers(
     background_tasks: BackgroundTasks
 ):
     """
-    Generate offers for multiple users in batch
+    Generate offers for multiple batches of ML predictions
     
-    Each request contains only ML model output.
-    User data is retrieved automatically for each user_id.
+    Each request contains ML output with predictions array.
+    User data is retrieved automatically from PostgreSQL for each user_id.
     """
     
     if reasoner is None or user_store is None:
         raise HTTPException(status_code=503, detail="System not initialized")
     
-    if len(requests) > 100:
+    all_results = []
+    total_predictions = sum(len(req.ml_output.predictions) for req in requests)
+    
+    if total_predictions > 500:
         raise HTTPException(
             status_code=400,
-            detail="Batch size limited to 100 users. Use multiple requests for larger batches."
+            detail="Total predictions limited to 500. Use multiple requests for larger batches."
         )
     
-    results = []
+    print(f"\n📥 Processing {len(requests)} batch(es) with {total_predictions} total predictions")
     
-    for idx, request in enumerate(requests, 1):
-        try:
-            ml_output = request.ml_output.dict()
-            user_id = ml_output['user_id']
-            
-            print(f"\nProcessing user {idx}/{len(requests)}: {user_id}")
-            
-            # Retrieve user data
-            user_data = user_store.get_user_data(user_id)
-            
-            if user_data is None:
-                results.append({
+    for batch_idx, request in enumerate(requests, 1):
+        predictions = request.ml_output.predictions
+        print(f"\n=== Batch {batch_idx}/{len(requests)}: {len(predictions)} predictions ===")
+        
+        for idx, prediction in enumerate(predictions, 1):
+            try:
+                pred_dict = prediction.dict()
+                user_id = pred_dict['user_id']
+                offer_flag = pred_dict['offer_flag']
+                
+                print(f"[{idx}/{len(predictions)}] Processing user: {user_id}")
+                
+                # Skip if offer_flag is 0
+                if offer_flag == 0:
+                    print(f"   ⏭️  Skipping - offer_flag=0")
+                    all_results.append({
+                        "success": False,
+                        "user_id": user_id,
+                        "timestamp": datetime.now().isoformat(),
+                        "recommendation": "no_offer_needed",
+                        "error": "ML model indicated no offer needed"
+                    })
+                    continue
+                
+                # Retrieve user data from PostgreSQL
+                user_data = user_store.get_user_data(user_id)
+                
+                if user_data is None:
+                    print(f"   ❌ User not found")
+                    all_results.append({
+                        "success": False,
+                        "user_id": user_id,
+                        "timestamp": datetime.now().isoformat(),
+                        "recommendation": "user_not_found",
+                        "error": "User not found in database"
+                    })
+                    continue
+                
+                # Generate offer
+                response = reasoner.process_ml_recommendation(user_data, pred_dict)
+                response['success'] = response.get('offer', {}).get('success', False)
+                
+                if response['success']:
+                    background_tasks.add_task(save_offer_to_file, user_id, response)
+                
+                all_results.append(response)
+                print(f"   ✅ Success")
+                
+            except Exception as e:
+                print(f"   ❌ Error: {e}")
+                all_results.append({
                     "success": False,
-                    "user_id": user_id,
-                    "error": "User not found in data store"
+                    "user_id": prediction.user_id,
+                    "timestamp": datetime.now().isoformat(),
+                    "recommendation": "error",
+                    "error": str(e)
                 })
-                continue
-            
-            response = reasoner.process_ml_recommendation(user_data, ml_output)
-            response['success'] = response.get('offer', {}).get('success', False)
-            
-            results.append(response)
-            
-        except Exception as e:
-            print(f"❌ Error processing user {request.ml_output.user_id}: {e}")
-            results.append({
-                "success": False,
-                "user_id": request.ml_output.user_id,
-                "error": str(e)
-            })
+    
+    successful = sum(1 for r in all_results if r.get('success'))
+    failed = sum(1 for r in all_results if not r.get('success'))
+    
+    print(f"\n✅ Batch processing complete:")
+    print(f"   Total: {len(all_results)}")
+    print(f"   Successful: {successful}")
+    print(f"   Failed: {failed}")
     
     return {
-        "total_requests": len(requests),
-        "successful": sum(1 for r in results if r.get('success')),
-        "failed": sum(1 for r in results if not r.get('success')),
-        "results": results
+        "total_batches": len(requests),
+        "total_predictions": len(all_results),
+        "successful": successful,
+        "failed": failed,
+        "results": all_results
     }
 
 
 # ==================== Helper Functions ====================
+
+class DecimalEncoder(json.JSONEncoder):
+    """Custom JSON encoder that handles Decimal types from PostgreSQL"""
+    def default(self, obj):
+        if isinstance(obj, Decimal):
+            # Convert Decimal to float for JSON serialization
+            return float(obj)
+        return super(DecimalEncoder, self).default(obj)
+
 
 def save_offer_to_file(user_id: str, response: Dict[str, Any]):
     """Background task to save generated offer to file"""
@@ -359,7 +474,7 @@ def save_offer_to_file(user_id: str, response: Dict[str, Any]):
         filename = f"./output/api/offer_{user_id}_{timestamp}.json"
         
         with open(filename, 'w', encoding='utf-8') as f:
-            json.dump(response, f, indent=2, ensure_ascii=False)
+            json.dump(response, f, indent=2, ensure_ascii=False, cls=DecimalEncoder)
         
         print(f"💾 Saved offer to {filename}")
         
@@ -383,7 +498,7 @@ if __name__ == "__main__":
     uvicorn.run(
         "api:app",
         host="0.0.0.0",
-        port=8000,
+        port=9000,
         reload=True,  # Set to False in production
         log_level="info"
     )

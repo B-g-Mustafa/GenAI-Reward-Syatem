@@ -1,8 +1,14 @@
+import os
+
 class Config:
     """Configuration class for GenAI Offer Generator"""
     
     # OpenRouter API Configuration
-    OPENROUTER_API_KEY = "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"
+    # Uses environment variable if provided, otherwise falls back to hardcoded key
+    OPENROUTER_API_KEY = os.environ.get(
+        "OPENROUTER_API_KEY", 
+        "YOUR_API_KEY"
+    )
     OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
     OPENROUTER_MODEL = "meta-llama/llama-3.3-70b-instruct:free"
     
@@ -15,7 +21,7 @@ class Config:
     MIN_CONFIDENCE_SCORE = 0.6
     
     # Domain Categories
-    DOMAINS = ["Travel", "Dining", "Retail", "Entertainment", "Gas", "Groceries"]
+    DOMAINS = ["Travel", "Business Services", "Retail", "Electronics", "Dining", "Entertainment"]
     
     @staticmethod
     def validate():

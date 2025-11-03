@@ -54,9 +54,10 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 cover/
+.github/
 
 # Vector Database
-chroma_db/
+# chroma_db/
 *.db
 
 # Translations

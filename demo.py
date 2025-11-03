@@ -92,10 +92,12 @@ def demo_single_user(reasoner: GenAIReasoner, user_id: str = 'USR001'):
         print(f"❌ Sample data not found for {user_id}")
         return None
     
-    # Display input data
+    # Display input data - handle both flat and nested structures
     print("📥 INPUT DATA:")
-    print(f"  User: {user_data['profile']['name']} ({user_id})")
-    print(f"  Segment: {user_data['profile']['segment']}")
+    user_name = user_data.get('name') or user_data.get('profile', {}).get('name', 'Unknown')
+    user_segment = user_data.get('segment') or user_data.get('profile', {}).get('segment', 'Standard')
+    print(f"  User: {user_name} ({user_id})")
+    print(f"  Segment: {user_segment}")
     print(f"  ML Recommendation: {ml_recommendation['domain']} "
           f"(confidence: {ml_recommendation['confidence_score']:.1%})")
     print(f"  Transaction History: {len(user_data['transaction_history'])} transactions")
