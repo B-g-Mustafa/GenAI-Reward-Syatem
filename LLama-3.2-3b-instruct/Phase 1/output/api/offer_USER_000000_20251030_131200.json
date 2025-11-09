@@ -1,0 +1,96 @@
+{
+  "user_id": "USER_000000",
+  "timestamp": "2025-10-30T13:12:00.274837",
+  "recommendation": "offer_generated",
+  "ml_recommendation": {
+    "user_id": "USER_000000",
+    "offer_flag": 1,
+    "domain": "Electronics",
+    "confidence_score": 0.9588919271748322,
+    "pred_version": "v1",
+    "prediction_timestamp": "2025-10-28T10:28:16.506594"
+  },
+  "behavioral_analysis": {
+    "insights": [
+      "User is highly engaged with the app and frequently interacts with offers.",
+      "Electronics is one of user's preferred categories based on their spending profile.",
+      "Mark Miller's lack of recent transactions in Electronics might indicate a temporary satisfaction of needs or a wait for the right offer, suggesting potential for future purchases with strategic targeting.",
+      "High engagement and redemption rates indicate a value-driven behavior where relevance, convenience, and savings are key, pointing to a proactive approach to utilizing benefits.",
+      "As a Tech Professional, Mark Miller likely has a constant need to adopt new technologies, driven by professional evolution or personal interest, making them a good target for electronics offers.",
+      "Seasonal patterns or temporal purchasing behaviors might influence Mark Miller's electronics purchases, necessitating timely and relevant offers.",
+      "Despite low churn risk, the absence of recent transactions warrants continuous monitoring and personalized offers to ensure satisfaction and loyalty."
+    ],
+    "spending_trends": {
+      "total_spend": 0,
+      "transaction_count": 0,
+      "average_transaction": 0,
+      "trend": "insufficient_data"
+    },
+    "engagement_metrics": {
+      "app_opens_per_month": 324,
+      "offer_click_rate": 0.5384615384615384,
+      "redemption_rate": 1.0,
+      "last_login": null,
+      "engagement_level": "high"
+    },
+    "offer_performance": {
+      "total_offers_received": 8,
+      "total_accepted": 2,
+      "acceptance_rate": 25.0,
+      "domain_performance": {
+        "Electronics": {
+          "total_offers": 1,
+          "accepted": 0,
+          "acceptance_rate": 0
+        }
+      },
+      "preferred_domains": [
+        "Electronics",
+        "Business Services"
+      ]
+    }
+  },
+  "applied_policies": [
+    {
+      "id": "compliance_policy",
+      "type": "compliance",
+      "domain": "all"
+    },
+    {
+      "id": "frequency_policy",
+      "type": "business_rules",
+      "domain": "all"
+    }
+  ],
+  "offer": {
+    "offer_title": "3X Points on Electronics",
+    "offer_description": "Earn 3 times the Membership Rewards points on all Electronics purchases made within the next 60 days, exclusive to Gold Card members like you. This offer is tailored to your interests and spending habits, providing a rewarding experience for your tech needs. With this offer, you can accelerate your points earnings and redeem them for even more valuable rewards.",
+    "terms_and_conditions": "Offer valid from the date of enrollment through the next 60 days. To qualify, simply use your enrolled Gold Card to make purchases in the Electronics category. Purchases must be made at participating merchants, and certain exclusions apply, such as purchases made at non-electronics retailers or through third-party payment services.",
+    "call_to_action": "Enroll now and start earning 3X points on your Electronics purchases",
+    "offer_type": "points_multiplier",
+    "offer_value": "3X Points",
+    "expiration_days": 60,
+    "minimum_spend": 0,
+    "category_restrictions": [
+      "Electronics"
+    ],
+    "reasoning": "This offer is optimal for Mark Miller due to his high engagement with the app, preference for the Electronics category, and value-driven behavior. The 3X points offer aligns with his spending profile and provides an incentive for future purchases, addressing the temporary satisfaction of needs and potential for future electronics buys. By targeting the Electronics category with a points multiplier, we cater to Mark's professional and personal interests as a Tech Professional.",
+    "policy_compliance_notes": [
+      "Complies with GLBA, CCPA, and GDPR by not sharing personal data without consent",
+      "Meets ECOA requirements by being non-discriminatory and available to all eligible Gold Card members",
+      "Adheres to Truth in Lending by clearly disclosing all terms and conditions",
+      "Monitors for suspicious patterns to comply with Anti-Money Laundering regulations",
+      "Respects marketing consent by only sending promotional communications to opted-in members",
+      "Follows data retention policies for storing user data",
+      "Ensures accessibility per ADA requirements for all offer communications",
+      "Aligns with American Express brand guidelines for premium and exclusive member experiences",
+      "Complies with Offer Frequency and Timing Policy by not exceeding 3 personalized offers per month and maintaining a 7-day gap between offers in the same category"
+    ],
+    "success": true,
+    "ml_confidence": 0.9588919271748322,
+    "domain": "Electronics",
+    "generated_at": "2025-10-30T13:12:00.234755"
+  },
+  "email_html": "\n        <div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;\">\n            <div style=\"background-color: #006FCF; color: white; padding: 20px; text-align: center;\">\n                <h1 style=\"margin: 0; font-size: 24px;\">Exclusive Offer Just for You</h1>\n            </div>\n            \n            <div style=\"background-color: white; padding: 30px; margin-top: 2px;\">\n                <h2 style=\"color: #006FCF; margin-top: 0;\">3X Points on Electronics</h2>\n                \n                <div style=\"background-color: #f0f7ff; padding: 15px; border-left: 4px solid #006FCF; margin: 20px 0;\">\n                    <p style=\"font-size: 18px; font-weight: bold; margin: 0; color: #006FCF;\">\n                        3X Points\n                    </p>\n                </div>\n                \n                <p style=\"font-size: 16px; line-height: 1.6; color: #333;\">\n                    Earn 3 times the Membership Rewards points on all Electronics purchases made within the next 60 days, exclusive to Gold Card members like you. This offer is tailored to your interests and spending habits, providing a rewarding experience for your tech needs. With this offer, you can accelerate your points earnings and redeem them for even more valuable rewards.\n                </p>\n                \n                <div style=\"text-align: center; margin: 30px 0;\">\n                    <a href=\"#activate\" style=\"background-color: #006FCF; color: white; padding: 15px 40px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;\">\n                        Enroll now and start earning 3X points on your Electronics purchases\n                    </a>\n                </div>\n                \n                <div style=\"border-top: 1px solid #ddd; padding-top: 20px; margin-top: 20px;\">\n                    <h3 style=\"font-size: 14px; color: #666; margin-bottom: 10px;\">Terms & Conditions:</h3>\n                    <p style=\"font-size: 12px; color: #666; line-height: 1.5;\">\n                        Offer valid from the date of enrollment through the next 60 days. To qualify, simply use your enrolled Gold Card to make purchases in the Electronics category. Purchases must be made at participating merchants, and certain exclusions apply, such as purchases made at non-electronics retailers or through third-party payment services.\n                    </p>\n                    \n                    <p style=\"font-size: 12px; color: #666;\">Valid for: 60 days</p>\n                </div>\n            </div>\n            \n            <div style=\"text-align: center; padding: 20px; font-size: 12px; color: #999;\">\n                <p>American Express® | Member Since [Year]</p>\n                <p>This offer was personalized based on your spending preferences</p>\n            </div>\n        </div>\n        ",
+  "success": true
+}
