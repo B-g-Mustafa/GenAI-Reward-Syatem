@@ -1,34 +1,33 @@
 """
-Offer Generator - Uses NVIDIA LLM via LangChain to generate personalized, policy-compliant offers
+Offer Generator - Uses NVIDIA LLM via direct API calls to generate personalized, policy-compliant offers
 based on causal archetypes.
 """
 
 import json
 from typing import Dict, List, Any
-# Import LangChain components instead of OpenAI
-from langchain_nvidia_ai_endpoints import ChatNVIDIA
-from langchain_core.messages import SystemMessage, HumanMessage
+import requests  # Import requests library
 from config import Config
 import pandas as pd
 
 
 class OfferGenerator:
     """Generates personalized offers using LLM with policy constraints and causal analysis"""
-    
+
     def __init__(self):
-        """Initialize the offer generator with NVIDIA API using LangChain"""
+        """Initialize the offer generator with NVIDIA API"""
         self.api_key = Config.NVIDIA_API_KEY
         self.model = Config.NVIDIA_MODEL
-        
+
         if not self.api_key:
             raise ValueError("NVIDIA API key not configured. Please set NVIDIA_API_KEY in config.py")
-        
-        # Initialize LangChain client with NVIDIA API
-        self.client = ChatNVIDIA(
-            model=self.model,
-            nvidia_api_key=self.api_key
-        )
-    
+
+        # Configure for direct NVIDIA API call
+        self.invoke_url = "https://integrate.api.nvidia.com/v1/chat/completions"
+        self.headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Accept": "application/json"
+        }
+
     def generate_offer(
         self,
         user_data: Dict[str, Any],
@@ -38,17 +37,17 @@ class OfferGenerator:
     ) -> Dict[str, Any]:
         """
         Generate a personalized offer using LLM based on causal analysis
-        
+
         Args:
             user_data: User profile and transaction data
             behavioral_analysis: Output from RootCauseAnalyzer (including causal archetype)
             relevant_policies: Retrieved policies from RAG system
             ml_recommendation: ML model output
-            
+
         Returns:
             Dict containing the generated offer and metadata
         """
-        
+
         # Build the prompt for the LLM
         prompt = self._build_offer_prompt(
             user_data,
@@ -56,23 +55,23 @@ class OfferGenerator:
             relevant_policies,
             ml_recommendation
         )
-        
+
         # Call the LLM API
         try:
             response = self._call_llm(prompt)
-            
+
             # Parse the response
             offer_data = self._parse_llm_response(response, ml_recommendation)
-            
+
             return offer_data
-            
+
         except Exception as e:
             print(f"Error generating offer: {str(e)}")
             return {
                 'success': False,
                 'error': str(e)
             }
-    
+
     def _build_offer_prompt(
         self,
         user_data: Dict[str, Any],
@@ -81,7 +80,7 @@ class OfferGenerator:
         ml_recommendation: Dict[str, Any]
     ) -> str:
         """Build the prompt for the LLM with causal archetype strategy"""
-        
+
         # Extract user information (flat structure)
         user_id = user_data.get('user_id', 'Unknown')
         user_name = user_data.get('name', 'Valued Card Member')
@@ -90,21 +89,21 @@ class OfferGenerator:
         churn_risk_score = user_data.get('churn_risk_score', 0)
         total_spend_12m = user_data.get('total_spend_12m', 0)
         historical_acceptance_rate = user_data.get('historical_acceptance_rate', 0)
-        
+
         # Extract causal analysis
         causal_analysis = behavioral_analysis.get('causal_analysis', {})
         user_archetype = causal_analysis.get('user_archetype', 'Unknown')
         archetype_justification = causal_analysis.get('justification', '')
         expected_uplift = causal_analysis.get('expected_uplift', 0)
         counterfactual_scenario = causal_analysis.get('counterfactual_scenario', '')
-        
+
         # Extract behavioral insights
         insights = behavioral_analysis.get('insights', [])
         domain = ml_recommendation.get('domain', 'General')
         confidence = ml_recommendation.get('confidence_score', 0)
         spending_trends = behavioral_analysis.get('spending_trends', {})
         engagement = behavioral_analysis.get('engagement_metrics', {})
-        
+
         # Separate policies and merchant data
         policies = []
         merchant_info = ""
@@ -113,13 +112,13 @@ class OfferGenerator:
                 merchant_info = p['content']
             else:
                 policies.append(p)
-        
+
         # Format policies
         policy_context = "\n\n".join([
             f"Policy: {p['metadata'].get('type', 'general')}\n{p['content']}"
             for p in policies
         ])
-        
+
         prompt = f"""You are an expert offer strategist for American Express specializing in causal targeting and personalized incentive design. Your task is to create a highly personalized offer that maximizes incremental impact while adhering to company policies.
 
     **CAUSAL ARCHETYPE CLASSIFICATION:**
@@ -347,56 +346,60 @@ class OfferGenerator:
     4. Select ONLY 2-4 merchants most relevant to user
 
     Generate the strategy-aligned offer now:"""
-        
-        return prompt
-    
-    def _call_llm(self, prompt: str) -> str:
-        """Call NVIDIA API using LangChain interface"""
-        
-        try:
-            messages = [
-                SystemMessage(content="You are an expert offer strategist for American Express. You create personalized, policy-compliant offers based on causal analysis. Always respond with valid JSON only."),
-                HumanMessage(content=prompt)
-            ]
 
-            # Use the invoke method with parameters
-            response = self.client.invoke(
-                messages,
-                temperature=0.7,
-                max_tokens=2000,
-                top_p=0.9
-            )
-            
-            return response.content
-            
-        except Exception as e:
+        return prompt
+
+    def _call_llm(self, prompt: str) -> str:
+        """Call NVIDIA API using the requests library"""
+
+        try:
+            payload = {
+                "model": self.model,
+                "messages": [
+                    {"role": "system", "content": "You are an expert offer strategist for American Express. You create personalized, policy-compliant offers based on causal analysis. Always respond with valid JSON only."},
+                    {"role": "user", "content": prompt}
+                ],
+                "temperature": 0.7,
+                "max_tokens": 2000,
+                "top_p": 0.9,
+                "stream": False
+            }
+
+            response = requests.post(self.invoke_url, headers=self.headers, json=payload)
+            response.raise_for_status()  # Raise an exception for bad status codes
+
+            llm_output = response.json()
+            content = llm_output['choices'][0]['message']['content']
+            return content
+
+        except requests.exceptions.RequestException as e:
             print(f"Error calling NVIDIA API: {str(e)}")
             raise
-    
+
     def _parse_llm_response(
-        self, 
-        response: str, 
+        self,
+        response: str,
         ml_recommendation: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Parse and validate LLM response"""
-        
+
         try:
             # Look for JSON content between the first '{' and last '}'
             start_idx = response.find('{')
             end_idx = response.rfind('}') + 1
-            
+
             if start_idx != -1 and end_idx > start_idx:
                 json_str = response[start_idx:end_idx]
                 offer_data = json.loads(json_str)
             else:
                 raise json.JSONDecodeError("No JSON object found in the response.", response, 0)
-            
+
             # Add metadata
             offer_data['success'] = True
             offer_data['ml_confidence'] = ml_recommendation.get('confidence_score', 0)
             offer_data['domain'] = ml_recommendation.get('domain')
             offer_data['generated_at'] = pd.Timestamp.now().isoformat()
-            
+
             # Validate and limit merchant count
             featured_merchants = offer_data.get('featured_merchants', [])
             if len(featured_merchants) > 4:
@@ -405,56 +408,56 @@ class OfferGenerator:
                 offer_data['validation_warning'] = f"Merchant list truncated from {len(featured_merchants)} to 4."
             elif len(featured_merchants) == 0:
                 offer_data['validation_warning'] = "No merchants were included in the offer."
-            
+
             # Validate required fields
             required_fields = ['offer_title', 'offer_description', 'call_to_action', 'offer_type', 'offer_value', 'reasoning']
             for field in required_fields:
                 if field not in offer_data:
                     raise ValueError(f"Missing required field in LLM response: {field}")
-            
+
             return offer_data
-            
+
         except json.JSONDecodeError as e:
             print(f"Failed to parse JSON response: {str(e)}")
             print(f"Raw response: {response}")
-            
+
             return {
                 'success': False, 'error': 'Failed to parse LLM response',
                 'raw_response': response, 'offer_title': 'Offer Generation Failed',
                 'offer_description': 'Unable to generate a valid offer at this time.'
             }
-    
+
     def format_offer_for_email(self, offer_data: Dict[str, Any]) -> str:
         """Format the offer as an email-ready HTML template"""
-        
+
         if not offer_data.get('success', False):
             return "<p>Unable to generate an offer at this time.</p>"
-        
+
         html_template = f"""
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
             <div style="background-color: #006FCF; color: white; padding: 20px; text-align: center;">
                 <h1 style="margin: 0; font-size: 24px;">Exclusive Offer Just for You</h1>
             </div>
-            
+
             <div style="background-color: white; padding: 30px; margin-top: 2px;">
                 <h2 style="color: #006FCF; margin-top: 0;">{offer_data.get('offer_title', '')}</h2>
-                
+
                 <div style="background-color: #f0f7ff; padding: 15px; border-left: 4px solid #006FCF; margin: 20px 0;">
                     <p style="font-size: 18px; font-weight: bold; margin: 0; color: #006FCF;">
                         {offer_data.get('offer_value', '')}
                     </p>
                 </div>
-                
+
                 <p style="font-size: 16px; line-height: 1.6; color: #333;">
                     {offer_data.get('offer_description', '')}
                 </p>
-                
+
                 <div style="text-align: center; margin: 30px 0;">
                     <a href="#activate" style="background-color: #006FCF; color: white; padding: 15px 40px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">
                         {offer_data.get('call_to_action', 'Activate Offer')}
                     </a>
                 </div>
-                
+
                 <div style="border-top: 1px solid #ddd; padding-top: 20px; margin-top: 20px;">
                     <h3 style="font-size: 14px; color: #666; margin-bottom: 10px;">Terms & Conditions:</h3>
                     <p style="font-size: 12px; color: #666; line-height: 1.5;">
@@ -464,12 +467,12 @@ class OfferGenerator:
                     {f'<p style="font-size: 12px; color: #666;">Valid for: {offer_data.get("expiration_days", 30)} days</p>' if offer_data.get('expiration_days') else ''}
                 </div>
             </div>
-            
+
             <div style="text-align: center; padding: 20px; font-size: 12px; color: #999;">
                 <p>American Express®</p>
                 <p>This offer was personalized based on your spending preferences.</p>
             </div>
         </div>
         """
-        
+
         return html_template

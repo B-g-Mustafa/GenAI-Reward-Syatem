@@ -7,43 +7,43 @@ import numpy as np
 from typing import Dict, List, Any, Tuple
 from datetime import datetime, timedelta
 import json
-# Import LangChain components instead of OpenAI
-from langchain_nvidia_ai_endpoints import ChatNVIDIA
-from langchain_core.messages import SystemMessage, HumanMessage
+import requests  # Import requests library
 from config import Config
 
 
 class RootCauseAnalyzer:
     """Analyzes user spending behavior using a hybrid rule-based + LLM causal inference approach"""
-    
+
     def __init__(self, use_llm_insights: bool = True):
         """
         Initialize the analyzer
-        
+
         Args:
             use_llm_insights: Whether to enhance analysis with LLM insights (default: True)
         """
         self.use_llm_insights = use_llm_insights
-        
+
         if self.use_llm_insights:
-            # Initialize the LangChain ChatNVIDIA client
-            self.client = ChatNVIDIA(
-                model=Config.NVIDIA_MODEL,
-                nvidia_api_key=Config.NVIDIA_API_KEY
-            )
-    
+            # Configure for direct NVIDIA API call
+            self.model = Config.NVIDIA_MODEL
+            self.invoke_url = "https://integrate.api.nvidia.com/v1/chat/completions"
+            self.headers = {
+                "Authorization": f"Bearer {Config.NVIDIA_API_KEY}",
+                "Accept": "application/json"
+            }
+
     def analyze_user_behavior(
-        self, 
+        self,
         user_data: Dict[str, Any],
         ml_recommendation: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
         Analyze user behavior and identify root causes for changes
-        
+
         Args:
             user_data: User profile and transaction history
             ml_recommendation: ML model output (user_id, offer_flag, domain, confidence_score)
-            
+
         Returns:
             Dict containing behavioral and causal analysis insights
         """
@@ -56,14 +56,14 @@ class RootCauseAnalyzer:
             'engagement_metrics': {},
             'risk_factors': []
         }
-        
+
         # Analyze spending patterns
         spending_analysis = self._analyze_spending_patterns(
             user_data.get('transaction_history', []),
             ml_recommendation.get('domain')
         )
         analysis['spending_trends'] = spending_analysis
-        
+
         # Analyze engagement behavior
         engagement_data = user_data.get('engagement_behavior', {})
         if not engagement_data:
@@ -77,7 +77,7 @@ class RootCauseAnalyzer:
             }
         engagement_analysis = self._analyze_engagement(engagement_data)
         analysis['engagement_metrics'] = engagement_analysis
-        
+
         # Analyze offer history
         offer_history = user_data.get('offer_history', [])
         if not offer_history:
@@ -87,7 +87,7 @@ class RootCauseAnalyzer:
             last_offer_domain = user_data.get('last_offer_domain', '')
             preferred_domain_1 = user_data.get('preferred_domain_1', '')
             preferred_domain_2 = user_data.get('preferred_domain_2', '')
-            
+
             offer_analysis = {
                 'total_offers_received': offers_shown,
                 'total_accepted': offers_accepted,
@@ -95,7 +95,7 @@ class RootCauseAnalyzer:
                 'domain_performance': {},
                 'preferred_domains': [d for d in [preferred_domain_1, preferred_domain_2] if d]
             }
-            
+
             if last_offer_domain and last_offer_domain != 'N/A':
                 offer_analysis['domain_performance'][last_offer_domain] = {
                     'total_offers': 1, 'accepted': 0, 'acceptance_rate': 0
@@ -103,96 +103,96 @@ class RootCauseAnalyzer:
         else:
             offer_analysis = self._analyze_offer_history(offer_history)
         analysis['offer_performance'] = offer_analysis
-        
+
         # Step 1: Generate rule-based insights (fast, quantitative)
         rule_based_insights = self._generate_rule_based_insights(
             spending_analysis, engagement_analysis, offer_analysis, user_data, ml_recommendation
         )
         analysis['insights'] = rule_based_insights
         analysis['rule_based_insights'] = rule_based_insights
-        
+
         # Step 2: Enhance with LLM for causal analysis (contextual, qualitative)
         if self.use_llm_insights:
             try:
                 llm_insights = self._generate_llm_insights(
-                    user_data, ml_recommendation, spending_analysis, 
+                    user_data, ml_recommendation, spending_analysis,
                     engagement_analysis, offer_analysis, rule_based_insights
                 )
-                
+
                 # Combine insights, now including the causal analysis block
                 analysis['causal_analysis'] = llm_insights.get('causal_analysis', {})
                 analysis['llm_insights'] = llm_insights.get('insights', [])
                 analysis['llm_reasoning'] = llm_insights.get('reasoning', '')
                 analysis['behavioral_patterns'] = llm_insights.get('patterns', [])
-                
+
                 # Merge for comprehensive view
                 all_insights = rule_based_insights + llm_insights.get('insights', [])
                 analysis['insights'] = all_insights
-                
+
             except Exception as e:
                 print(f"⚠️  LLM insights generation failed: {e}")
                 print("   Falling back to rule-based insights only")
-        
+
         return analysis
-    
+
     def _analyze_spending_patterns(
-        self, 
-        transactions: List[Dict[str, Any]], 
+        self,
+        transactions: List[Dict[str, Any]],
         target_domain: str
     ) -> Dict[str, Any]:
         """Analyze spending patterns in the target domain"""
         if not transactions:
             return {'total_spend': 0, 'transaction_count': 0, 'average_transaction': 0, 'trend': 'insufficient_data'}
-        
+
         df = pd.DataFrame(transactions)
         if 'date' in df.columns:
             df['date'] = pd.to_datetime(df['date'])
             df = df.sort_values('date')
-        
+
         domain_df = df[df['category'].str.lower() == target_domain.lower()] if target_domain and 'category' in df.columns else df
-        
+
         if len(domain_df) == 0:
             return {'total_spend': 0, 'transaction_count': 0, 'average_transaction': 0, 'trend': 'no_activity_in_domain', 'recent_merchants': []}
-        
+
         total_spend = domain_df['amount'].sum() if 'amount' in domain_df.columns else 0
         transaction_count = len(domain_df)
         avg_transaction = total_spend / transaction_count if transaction_count > 0 else 0
         trend_analysis = self._calculate_trend(domain_df)
-        
+
         recent_merchants = []
         if 'merchant' in domain_df.columns:
             recent_merchants = domain_df['merchant'].value_counts().head(5).to_dict()
-        
+
         return {
             'total_spend': float(total_spend), 'transaction_count': int(transaction_count),
             'average_transaction': float(avg_transaction), 'trend': trend_analysis['trend'],
             'trend_percentage': trend_analysis['percentage_change'], 'recent_merchants': recent_merchants,
             'last_transaction_date': domain_df['date'].max().isoformat() if 'date' in domain_df.columns else None
         }
-    
+
     def _calculate_trend(self, df: pd.DataFrame) -> Dict[str, Any]:
         """Calculate spending trend over time"""
         if 'date' not in df.columns or 'amount' not in df.columns:
             return {'trend': 'unknown', 'percentage_change': 0}
-        
+
         now = datetime.now()
         last_60_days = now - timedelta(days=60)
         previous_60_days = now - timedelta(days=120)
-        
+
         recent_spend = df[df['date'] >= last_60_days]['amount'].sum()
         previous_spend = df[(df['date'] >= previous_60_days) & (df['date'] < last_60_days)]['amount'].sum()
-        
+
         if previous_spend == 0:
             return {'trend': 'increasing', 'percentage_change': 100} if recent_spend > 0 else {'trend': 'stable', 'percentage_change': 0}
-        
+
         percentage_change = ((recent_spend - previous_spend) / previous_spend) * 100
-        
+
         if percentage_change > 10: trend = 'increasing'
         elif percentage_change < -10: trend = 'decreasing'
         else: trend = 'stable'
-        
+
         return {'trend': trend, 'percentage_change': round(percentage_change, 2), 'recent_spend': float(recent_spend), 'previous_spend': float(previous_spend)}
-    
+
     def _analyze_engagement(self, engagement_data: Dict[str, Any]) -> Dict[str, Any]:
         """Analyze user engagement with the app and offers"""
         return {
@@ -202,43 +202,43 @@ class RootCauseAnalyzer:
             'last_login': engagement_data.get('last_login'),
             'engagement_level': self._classify_engagement_level(engagement_data)
         }
-    
+
     def _classify_engagement_level(self, engagement_data: Dict[str, Any]) -> str:
         """Classify user engagement level"""
         app_opens, offer_clicks = engagement_data.get('app_opens', 0), engagement_data.get('offer_clicks', 0)
         if app_opens >= 20 and offer_clicks >= 5: return 'high'
         elif app_opens >= 10 and offer_clicks >= 2: return 'medium'
         else: return 'low'
-    
+
     def _analyze_offer_history(self, offer_history: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Analyze past offer performance"""
         if not offer_history:
             return {'total_offers_received': 0, 'acceptance_rate': 0, 'preferred_domains': []}
-        
+
         total_offers = len(offer_history)
         accepted_offers = sum(1 for offer in offer_history if offer.get('status') == 'accepted')
-        
+
         domain_counts, domain_acceptances = {}, {}
         for offer in offer_history:
             domain, status = offer.get('domain', 'unknown'), offer.get('status')
             domain_counts[domain] = domain_counts.get(domain, 0) + 1
             if status == 'accepted': domain_acceptances[domain] = domain_acceptances.get(domain, 0) + 1
-        
+
         domain_performance = {
             domain: {
                 'total_offers': count, 'accepted': domain_acceptances.get(domain, 0),
                 'acceptance_rate': round((domain_acceptances.get(domain, 0) / count) * 100, 2)
             } for domain, count in domain_counts.items()
         }
-        
+
         preferred_domains = sorted(domain_performance.items(), key=lambda x: x[1]['acceptance_rate'], reverse=True)
-        
+
         return {
             'total_offers_received': total_offers, 'total_accepted': accepted_offers,
             'acceptance_rate': round((accepted_offers / total_offers * 100), 2) if total_offers > 0 else 0,
             'domain_performance': domain_performance, 'preferred_domains': [d[0] for d in preferred_domains[:3]]
         }
-    
+
     def _generate_rule_based_insights(
         self,
         spending_analysis: Dict[str, Any],
@@ -252,32 +252,32 @@ class RootCauseAnalyzer:
         domain = ml_recommendation.get('domain', 'general')
         trend = spending_analysis.get('trend')
         percentage_change = spending_analysis.get('trend_percentage', 0)
-        
+
         if trend == 'decreasing': insights.append(f"User's {domain} spending has decreased by {abs(percentage_change):.1f}% in the last 60 days.")
         elif trend == 'increasing': insights.append(f"User shows increasing interest in {domain} with spending up {percentage_change:.1f}% recently.")
         elif trend == 'no_activity_in_domain': insights.append(f"User has no recent activity in {domain}, an opportunity to introduce this category.")
-        
+
         engagement_level = engagement_analysis.get('engagement_level')
         if engagement_level == 'high': insights.append("User is highly engaged with the app and frequently interacts with offers.")
         elif engagement_level == 'low': insights.append("User has low engagement - a compelling offer could re-activate their interest.")
-        
+
         acceptance_rate = offer_analysis.get('acceptance_rate', 0)
         if acceptance_rate > 50: insights.append(f"User has a strong history of accepting offers ({acceptance_rate:.0f}% acceptance rate).")
         elif acceptance_rate < 20 and offer_analysis.get('total_offers_received', 0) > 3: insights.append(f"User has been selective with past offers ({acceptance_rate:.0f}% acceptance rate) - ensure this offer is highly relevant.")
-        
+
         preferred_domains_user = [d for d in [user_data.get('preferred_domain_1', ''), user_data.get('preferred_domain_2', '')] if d]
         preferred_domains_offer = offer_analysis.get('preferred_domains', [])
-        
+
         if domain.lower() in [d.lower() for d in preferred_domains_user]: insights.append(f"{domain} is one of user's preferred categories based on spending profile.")
         elif domain in preferred_domains_offer: insights.append(f"{domain} is among user's preferred categories based on past offer acceptance.")
-        
+
         recent_merchants = spending_analysis.get('recent_merchants', {})
         if recent_merchants:
             top_merchant = list(recent_merchants.keys())[0] if recent_merchants else None
             if top_merchant: insights.append(f"User frequently shops at {top_merchant} - consider merchant-specific offers.")
-        
+
         return insights
-    
+
     def _generate_llm_insights(
         self,
         user_data: Dict[str, Any],
@@ -288,26 +288,34 @@ class RootCauseAnalyzer:
         rule_based_insights: List[str]
     ) -> Dict[str, Any]:
         """
-        Generate enhanced insights using LLM analysis with LangChain and NVIDIA
-        
+        Generate enhanced insights using LLM analysis via direct API call
+
         Returns:
             Dict with 'causal_analysis', 'insights', 'reasoning', and 'patterns'
         """
         prompt_text = self._build_llm_analysis_prompt(
-            user_data, ml_recommendation, spending_analysis, 
+            user_data, ml_recommendation, spending_analysis,
             engagement_analysis, offer_analysis, rule_based_insights
         )
-        
+
         try:
-            messages = [
-                SystemMessage(content="You are an expert causal analyst for American Express specializing in uplift modeling. Analyze user data to classify them into causal archetypes and estimate the incremental impact of an offer. Respond only with valid JSON."),
-                HumanMessage(content=prompt_text)
-            ]
-            
-            # Use LangChain's invoke method
-            response = self.client.invoke(messages, temperature=0.7, max_tokens=1500)
-            llm_output = response.content
-            
+            payload = {
+                "model": self.model,
+                "messages": [
+                    {"role": "system", "content": "You are an expert causal analyst for American Express specializing in uplift modeling. Analyze user data to classify them into causal archetypes and estimate the incremental impact of an offer. Respond only with valid JSON."},
+                    {"role": "user", "content": prompt_text}
+                ],
+                "temperature": 0.7,
+                "max_tokens": 1500,
+                "stream": False
+            }
+
+            response = requests.post(self.invoke_url, headers=self.headers, json=payload)
+            response.raise_for_status()  # Raise exception for bad status codes
+
+            llm_response = response.json()
+            llm_output = llm_response['choices'][0]['message']['content']
+
             try:
                 start_idx, end_idx = llm_output.find('{'), llm_output.rfind('}') + 1
                 if start_idx != -1 and end_idx > start_idx:
@@ -315,16 +323,16 @@ class RootCauseAnalyzer:
                     parsed_output = json.loads(json_str)
                 else:
                     parsed_output = self._parse_llm_text_output(llm_output)
-                
+
                 # The new prompt format returns all necessary keys directly
                 parsed_output['raw_output'] = llm_output
                 return parsed_output
-                
+
             except json.JSONDecodeError:
                 parsed_output = self._parse_llm_text_output(llm_output)
                 return {'raw_output': llm_output, **parsed_output}
-                
-        except Exception as e:
+
+        except requests.exceptions.RequestException as e:
             print(f"LLM analysis error: {e}")
             return {'insights': [], 'reasoning': '', 'patterns': [], 'causal_analysis': {}, 'error': str(e)}
 
@@ -338,7 +346,7 @@ class RootCauseAnalyzer:
         rule_based_insights: List[str]
     ) -> str:
         """Build a comprehensive prompt for causal analysis with archetype classification"""
-        
+
         # Extract flat user data structure
         name = user_data.get('name', 'Unknown')
         segment = user_data.get('segment', 'Standard')
@@ -346,11 +354,11 @@ class RootCauseAnalyzer:
         age = user_data.get('age', 'N/A')
         customer_lifecycle_stage = user_data.get('customer_lifecycle_stage', 'N/A')
         churn_risk_score = user_data.get('churn_risk_score', 0)
-        
+
         # Get transaction history if available
         transactions = user_data.get('transaction_history', [])
         domain = ml_recommendation.get('domain', 'general')
-        
+
         # Format recent transactions
         recent_txns = sorted(
             transactions,
@@ -361,7 +369,7 @@ class RootCauseAnalyzer:
             f"  - {t.get('date', 'N/A')}: ${t.get('amount', 0):.2f} at {t.get('merchant', 'Unknown')} ({t.get('category', 'N/A')})"
             for t in recent_txns
         ]) if recent_txns else "No recent transactions available"
-        
+
         prompt = f"""You are an expert causal analyst for American Express specializing in uplift modeling and treatment effect estimation. Your task is to determine the probable incremental impact of sending an offer to this card member.
 
     **CAUSAL INFERENCE FRAMEWORK:**
@@ -427,21 +435,21 @@ class RootCauseAnalyzer:
 
     2. **Classify into Causal Archetype**:
     Based on evidence, determine which archetype best describes this user:
-    
+
     **Indicators of PERSUADABLES:**
     - Declining engagement but past positive responses
     - Moderate spending with recent downward trend
     - Category interest shown but needs activation
     - Historical offer acceptance but selective behavior
     - Medium churn risk with recoverable engagement
-    
+
     **Indicators of SURE THINGS:**
     - Consistently high engagement regardless of offers
     - Strong upward spending trend in target category
     - High organic transaction frequency
     - Low churn risk with stable patterns
     - Will likely transact even without incentive
-    
+
     **Indicators of LOST CAUSES:**
     - Very low engagement despite past offers
     - Near-zero spending in target category
@@ -610,25 +618,25 @@ class RootCauseAnalyzer:
     }}
 
     Generate the causal analysis now:"""
-        
+
         return prompt
-    
+
     def _parse_llm_text_output(self, text: str) -> Dict[str, Any]:
         """Parse LLM output when it's not in JSON format"""
         insights, patterns, reasoning = [], [], ""
         lines = text.split('\n')
-        
+
         for line in lines:
             line = line.strip()
             if line.startswith(('- ', '• ', '* ', '1.', '2.', '3.')):
                 clean_line = line.lstrip('- •*123456789. ')
                 if clean_line: insights.append(clean_line)
-        
+
         if not insights: reasoning = text
         else:
             sentences = text.split('.')
             reasoning = '. '.join(sentences[:3]) + '.' if sentences else text
-        
+
         # Return a structure that matches the expected JSON format as a fallback
         return {
             'causal_analysis': {'justification': reasoning},

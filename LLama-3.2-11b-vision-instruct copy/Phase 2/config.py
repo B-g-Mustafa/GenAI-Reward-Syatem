@@ -22,9 +22,8 @@ class Config:
     
     # Domain Categories
     DOMAINS = ["Travel", "Business Services", "Retail", "Electronics", "Dining", "Entertainment"]
-    
     NVIDIA_API_KEY = "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"
-    NVIDIA_MODEL = "meta/llama-3.2-3b-instruct"
+    NVIDIA_MODEL = "meta/llama-3.2-11b-vision-instruct"
 
     @staticmethod
     def validate():
