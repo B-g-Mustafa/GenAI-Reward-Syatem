@@ -1,0 +1,344 @@
+{
+  "evaluation_criteria": {
+    "comprehensiveness": {
+      "description": "How well the insights cover different aspects of user behavior",
+      "sub_criteria": {
+        "behavioral_patterns": "Identification of spending patterns and trends",
+        "engagement_analysis": "Analysis of app interaction and offer engagement",
+        "historical_context": "Consideration of past behavior and preferences",
+        "merchant_specific": "Merchant-level insights and recommendations"
+      },
+      "scoring": "0-25 points per sub-criterion, max 100"
+    },
+    "actionability": {
+      "description": "How directly the insights can be translated into action",
+      "sub_criteria": {
+        "specific_recommendations": "Clear, actionable recommendations",
+        "targeting_guidance": "Guidance on offer targeting approach",
+        "timing_suggestions": "Temporal aspects of targeting",
+        "value_proposition": "Clear indication of potential value/impact"
+      },
+      "scoring": "0-25 points per sub-criterion, max 100"
+    },
+    "predictive_value": {
+      "description": "How well the insights predict future behavior",
+      "sub_criteria": {
+        "uplift_prediction": "Specific predictions about offer impact",
+        "behavior_forecasting": "Predictions about future behavior",
+        "risk_assessment": "Identification of potential risks",
+        "opportunity_identification": "Spotting future opportunities"
+      },
+      "scoring": "0-25 points per sub-criterion, max 100"
+    },
+    "reasoning_depth": {
+      "description": "Depth and sophistication of analysis",
+      "sub_criteria": {
+        "causal_analysis": "Understanding of cause-effect relationships",
+        "context_integration": "Integration of multiple data points",
+        "hypothesis_generation": "Generation of testable hypotheses",
+        "nuanced_understanding": "Capture of subtle patterns"
+      },
+      "scoring": "0-25 points per sub-criterion, max 100"
+    }
+  },
+  "model_scores": {
+    "Baseline_insights": {
+      "comprehensiveness": {
+        "behavioral_patterns": 25,
+        "engagement_analysis": 20,
+        "historical_context": 25,
+        "merchant_specific": 20,
+        "total": 90
+      },
+      "actionability": {
+        "specific_recommendations": 15,
+        "targeting_guidance": 20,
+        "timing_suggestions": 25,
+        "value_proposition": 20,
+        "total": 80
+      },
+      "predictive_value": {
+        "uplift_prediction": 15,
+        "behavior_forecasting": 25,
+        "risk_assessment": 20,
+        "opportunity_identification": 25,
+        "total": 85
+      },
+      "reasoning_depth": {
+        "causal_analysis": 25,
+        "context_integration": 25,
+        "hypothesis_generation": 20,
+        "nuanced_understanding": 25,
+        "total": 95
+      },
+      "total_score": 350,
+      "average_score": 87.5
+    },
+    "LLama-3.3-70b-instruct-phase-2": {
+      "comprehensiveness": {
+        "behavioral_patterns": 20,
+        "engagement_analysis": 25,
+        "historical_context": 20,
+        "merchant_specific": 15,
+        "total": 80
+      },
+      "actionability": {
+        "specific_recommendations": 20,
+        "targeting_guidance": 25,
+        "timing_suggestions": 15,
+        "value_proposition": 20,
+        "total": 80
+      },
+      "predictive_value": {
+        "uplift_prediction": 15,
+        "behavior_forecasting": 20,
+        "risk_assessment": 15,
+        "opportunity_identification": 20,
+        "total": 70
+      },
+      "reasoning_depth": {
+        "causal_analysis": 20,
+        "context_integration": 20,
+        "hypothesis_generation": 15,
+        "nuanced_understanding": 20,
+        "total": 75
+      },
+      "total_score": 305,
+      "average_score": 76.25
+    },
+    "LLama-3.3-70b-instruct-phase-1": {
+      "comprehensiveness": {
+        "behavioral_patterns": 20,
+        "engagement_analysis": 25,
+        "historical_context": 20,
+        "merchant_specific": 15,
+        "total": 80
+      },
+      "actionability": {
+        "specific_recommendations": 25,
+        "targeting_guidance": 25,
+        "timing_suggestions": 15,
+        "value_proposition": 25,
+        "total": 90
+      },
+      "predictive_value": {
+        "uplift_prediction": 20,
+        "behavior_forecasting": 20,
+        "risk_assessment": 15,
+        "opportunity_identification": 25,
+        "total": 80
+      },
+      "reasoning_depth": {
+        "causal_analysis": 20,
+        "context_integration": 20,
+        "hypothesis_generation": 20,
+        "nuanced_understanding": 20,
+        "total": 80
+      },
+      "total_score": 330,
+      "average_score": 82.5
+    },
+    "LLama-3.2-3b-instruct-phase-2": {
+      "comprehensiveness": {
+        "behavioral_patterns": 15,
+        "engagement_analysis": 15,
+        "historical_context": 15,
+        "merchant_specific": 15,
+        "total": 60
+      },
+      "actionability": {
+        "specific_recommendations": 15,
+        "targeting_guidance": 20,
+        "timing_suggestions": 10,
+        "value_proposition": 15,
+        "total": 60
+      },
+      "predictive_value": {
+        "uplift_prediction": 10,
+        "behavior_forecasting": 15,
+        "risk_assessment": 20,
+        "opportunity_identification": 15,
+        "total": 60
+      },
+      "reasoning_depth": {
+        "causal_analysis": 15,
+        "context_integration": 15,
+        "hypothesis_generation": 15,
+        "nuanced_understanding": 15,
+        "total": 60
+      },
+      "total_score": 240,
+      "average_score": 60
+    },
+    "LLama-3.2-3b-instruct-phase-1": {
+      "comprehensiveness": {
+        "behavioral_patterns": 15,
+        "engagement_analysis": 15,
+        "historical_context": 10,
+        "merchant_specific": 15,
+        "total": 55
+      },
+      "actionability": {
+        "specific_recommendations": 15,
+        "targeting_guidance": 15,
+        "timing_suggestions": 10,
+        "value_proposition": 15,
+        "total": 55
+      },
+      "predictive_value": {
+        "uplift_prediction": 10,
+        "behavior_forecasting": 15,
+        "risk_assessment": 10,
+        "opportunity_identification": 15,
+        "total": 50
+      },
+      "reasoning_depth": {
+        "causal_analysis": 10,
+        "context_integration": 15,
+        "hypothesis_generation": 10,
+        "nuanced_understanding": 15,
+        "total": 50
+      },
+      "total_score": 210,
+      "average_score": 52.5
+    },
+    "LLama-3.2-90b-vision-instruct-phase-2": {
+      "comprehensiveness": {
+        "behavioral_patterns": 15,
+        "engagement_analysis": 20,
+        "historical_context": 15,
+        "merchant_specific": 15,
+        "total": 65
+      },
+      "actionability": {
+        "specific_recommendations": 20,
+        "targeting_guidance": 20,
+        "timing_suggestions": 10,
+        "value_proposition": 20,
+        "total": 70
+      },
+      "predictive_value": {
+        "uplift_prediction": 15,
+        "behavior_forecasting": 15,
+        "risk_assessment": 20,
+        "opportunity_identification": 15,
+        "total": 65
+      },
+      "reasoning_depth": {
+        "causal_analysis": 15,
+        "context_integration": 20,
+        "hypothesis_generation": 15,
+        "nuanced_understanding": 15,
+        "total": 65
+      },
+      "total_score": 265,
+      "average_score": 66.25
+    },
+    "LLama-3.2-90b-vision-instruct-phase-1": {
+      "comprehensiveness": {
+        "behavioral_patterns": 20,
+        "engagement_analysis": 20,
+        "historical_context": 15,
+        "merchant_specific": 15,
+        "total": 70
+      },
+      "actionability": {
+        "specific_recommendations": 25,
+        "targeting_guidance": 20,
+        "timing_suggestions": 15,
+        "value_proposition": 25,
+        "total": 85
+      },
+      "predictive_value": {
+        "uplift_prediction": 25,
+        "behavior_forecasting": 20,
+        "risk_assessment": 15,
+        "opportunity_identification": 20,
+        "total": 80
+      },
+      "reasoning_depth": {
+        "causal_analysis": 20,
+        "context_integration": 20,
+        "hypothesis_generation": 20,
+        "nuanced_understanding": 20,
+        "total": 80
+      },
+      "total_score": 315,
+      "average_score": 78.75
+    }
+  },
+  "summary": {
+    "model_rankings": [
+      {
+        "model": "Baseline_insights",
+        "score": 87.5,
+        "strengths": [
+          "Deep causal analysis",
+          "Comprehensive historical context",
+          "Strong predictive elements",
+          "Nuanced understanding of user patterns"
+        ]
+      },
+      {
+        "model": "LLama-3.3-70b-instruct-phase-1",
+        "score": 82.5,
+        "strengths": [
+          "Strong actionability",
+          "Good predictive insights",
+          "Balanced analysis across criteria"
+        ]
+      },
+      {
+        "model": "LLama-3.2-90b-vision-instruct-phase-1",
+        "score": 78.75,
+        "strengths": [
+          "Specific uplift predictions",
+          "Strong actionable recommendations",
+          "Good reasoning depth"
+        ]
+      },
+      {
+        "model": "LLama-3.3-70b-instruct-phase-2",
+        "score": 76.25,
+        "strengths": [
+          "Good engagement analysis",
+          "Strong targeting guidance",
+          "Balanced comprehensiveness"
+        ]
+      },
+      {
+        "model": "LLama-3.2-90b-vision-instruct-phase-2",
+        "score": 66.25,
+        "strengths": [
+          "Decent actionability",
+          "Good risk assessment",
+          "Balanced analysis"
+        ]
+      },
+      {
+        "model": "LLama-3.2-3b-instruct-phase-2",
+        "score": 60.0,
+        "strengths": [
+          "Basic comprehensiveness",
+          "Simple actionable insights"
+        ]
+      },
+      {
+        "model": "LLama-3.2-3b-instruct-phase-1",
+        "score": 52.5,
+        "strengths": [
+          "Basic insights coverage",
+          "Simple recommendations"
+        ]
+      }
+    ],
+    "key_findings": [
+      "Larger models (70b, 90b) consistently outperform smaller models",
+      "Phase 1 generally shows better reasoning depth than Phase 2",
+      "Baseline model shows superior causal analysis and context integration",
+      "Models show consistent identification of basic patterns but vary in depth of analysis",
+      "Uplift prediction specificity varies significantly across models"
+    ]
+  }
+}
+

@@ -1,0 +1,92 @@
+{
+  "merged_insights": {
+    "Baseline_insights": [
+      "User's Travel spending has decreased by 77.1% in the last 60 days compared to the previous period.",
+      "User is highly engaged with the app and frequently interacts with offers.",
+      "User has a strong history of accepting offers (67% acceptance rate).",
+      "Travel is among user's preferred categories based on past offer acceptance.",
+      "User frequently shops at Delta Airlines - consider merchant-specific offers.",
+      "The user's significant decrease in travel spending over the last 60 days, despite a high engagement rate with travel-related offers, might indicate a recent completion of a major travel event or a change in personal or professional circumstances that has temporarily reduced their need for travel, such as the end of a business project requiring frequent flights or a vacation season coming to a close.",
+      "The user's high acceptance rate of offers and frequent interaction with the app suggest a strong motivation to maximize rewards and benefits from their spending, indicating a preference for value and potentially a lifestyle that appreciates luxury or convenience, given the high average transaction value in travel and dining categories.",
+      "The concentration of travel transactions in a short period followed by a decrease could also suggest a seasonal pattern, where the user tends to travel more during certain times of the year, possibly for vacation or to visit family and friends during holidays, and less during other times, pointing to potential opportunities for targeted seasonal offers."
+    ],
+    "LLama-3.3-70b-instruct-phase-2": [
+      "User's Travel spending has decreased by 77.1% in the last 60 days compared to the previous period.",
+      "User is highly engaged with the app and frequently interacts with offers.",
+      "User has a strong history of accepting offers (67% acceptance rate).",
+      "Travel is among user's preferred categories based on past offer acceptance.",
+      "User frequently shops at Delta Airlines - consider merchant-specific offers.",
+      "The user's travel spending decline coincides with a decrease in overall engagement, suggesting a need for reactivation",
+      "Historical offer acceptance and preferred category interest indicate a strong treatment effect potential when offers match priorities",
+      "The user's high engagement and frequent interaction with offers suggest a willingness to respond to well-targeted incentives"
+    ],
+    "LLama-3.3-70b-instruct-phase-1": [
+      "User's Travel spending has decreased by 77.1% in the last 60 days compared to the previous period.",
+      "User is highly engaged with the app and frequently interacts with offers.",
+      "User has a strong history of accepting offers (67% acceptance rate).",
+      "Travel is among user's preferred categories based on past offer acceptance.",
+      "User frequently shops at Delta Airlines - consider merchant-specific offers.",
+      "The user's responsiveness to offers, especially in the travel category, suggests a positive treatment effect from targeted incentives, potentially increasing their travel spending",
+      "The significant decline in travel spending indicates a need for reactivation, which could be effectively addressed through personalized offers, thereby increasing the uplift",
+      "The high engagement level and preference for travel offers suggest a medium to high potential for incremental impact from sending an offer, as it aligns with the user's interests and could persuade them to make purchases they might not have made otherwise"
+    ],
+    "LLama-3.2-3b-instruct-phase-2": [
+      "User's Travel spending has decreased by 77.1% in the last 60 days.",
+      "User is highly engaged with the app and frequently interacts with offers.",
+      "User has a strong history of accepting offers (67% acceptance rate).",
+      "Travel is among user's preferred categories based on past offer acceptance.",
+      "User frequently shops at Delta Airlines - consider merchant-specific offers.",
+      "Recent travel offer acceptance suggests user responds to category-specific, high-value propositions",
+      "Declining dining spend coincides with competitor enhanced rewards - user may be shifting wallet share",
+      "Historical 60% acceptance rate indicates strong treatment effect potential when offers match priorities"
+    ],
+    "LLama-3.2-3b-instruct-phase-1": [
+      "User's Travel spending has decreased by 77.1% in the last 60 days compared to the previous period.",
+      "User is highly engaged with the app and frequently interacts with offers.",
+      "User has a strong history of accepting offers (67% acceptance rate).",
+      "Travel is among user's preferred categories based on past offer acceptance.",
+      "User frequently shops at Delta Airlines - consider merchant-specific offers.",
+      "The user's declining engagement and moderate spending in the target category (Travel) suggest a need for activation and targeted offers."
+    ],
+    "LLama-3.2-90b-vision-instruct-phase-2": [
+      "User's Travel spending has decreased by 77.1% in the last 60 days.",
+      "User is highly engaged with the app and frequently interacts with offers.",
+      "User has a strong history of accepting offers (67% acceptance rate).",
+      "Travel is among user's preferred categories based on past offer acceptance.",
+      "User frequently shops at Delta Airlines - consider merchant-specific offers.",
+      "Recent travel offer acceptance suggests user responds to category-specific, high-value propositions",
+      "Declining dining spend coincides with competitor enhanced rewards - user may be shifting wallet share",
+      "Historical 60% acceptance rate indicates strong treatment effect potential when offers match priorities"
+    ],
+    "LLama-3.2-90b-vision-instruct-phase-1": [
+      "User's Travel spending has decreased by 77.1% in the last 60 days compared to the previous period.",
+      "User is highly engaged with the app and frequently interacts with offers.",
+      "User has a strong history of accepting offers (67% acceptance rate).",
+      "Travel is among user's preferred categories based on past offer acceptance.",
+      "User frequently shops at Delta Airlines - consider merchant-specific offers.",
+      "The user's recent decrease in travel spending indicates that they may be on the fence, making them a prime candidate for an offer that could activate them.",
+      "The user's history of accepting offers and frequent interactions with the app suggest that they are receptive to marketing efforts, but their current behavior indicates that they need an incentive to convert.",
+      "The expected uplift of 20% suggests that the offer has a moderate impact on the user's likelihood to convert, indicating that it is a good candidate for targeting."
+    ],
+    "LLama-3.2-11b-vision-instruct-phase-2": [
+      "User's Travel spending has decreased by 77.1% in the last 60 days.",
+      "User is highly engaged with the app and frequently interacts with offers.",
+      "User has a strong history of accepting offers (67% acceptance rate).",
+      "Travel is among user's preferred categories based on past offer acceptance.",
+      "User frequently shops at Delta Airlines - consider merchant-specific offers.",
+      "Recent travel offer acceptance suggests user responds to category-specific, high-value propositions",
+      "Declining dining spend coincides with competitor enhanced rewards - user may be shifting wallet share",
+      "Historical 60% acceptance rate indicates strong treatment effect potential when offers match priorities"
+    ],
+    "LLama-3.2-11b-vision-instruct-phase-1": [
+      "User's Travel spending has decreased by 77.1% in the last 60 days compared to the previous period.",
+      "User is highly engaged with the app and frequently interacts with offers.",
+      "User has a strong history of accepting offers (67% acceptance rate).",
+      "Travel is among user's preferred categories based on past offer acceptance.",
+      "User frequently shops at Delta Airlines - consider merchant-specific offers.",
+      "The user's recent decrease in travel spending indicates that they may be on the fence, making them a prime candidate for an offer that could activate them.",
+      "The user's history of accepting offers and frequent interactions with the app suggest that they are receptive to marketing efforts, but their current behavior indicates that they need an incentive to convert.",
+      "The expected uplift of 20% suggests that the offer has a moderate impact on the user's likelihood to convert, indicating that it is a good candidate for targeting."
+    ]
+  }
+}
