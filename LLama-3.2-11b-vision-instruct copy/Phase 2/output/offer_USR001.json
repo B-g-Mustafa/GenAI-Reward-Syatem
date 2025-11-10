@@ -1,0 +1,145 @@
+{
+  "user_id": "USR001",
+  "timestamp": "2025-11-09T13:43:31.609605",
+  "recommendation": "offer_generated",
+  "ml_recommendation": {
+    "user_id": "USR001",
+    "offer_flag": true,
+    "domain": "Travel",
+    "confidence_score": 0.82
+  },
+  "behavioral_analysis": {
+    "insights": [
+      "User's Travel spending has decreased by 77.1% in the last 60 days.",
+      "User is highly engaged with the app and frequently interacts with offers.",
+      "User has a strong history of accepting offers (67% acceptance rate).",
+      "Travel is among user's preferred categories based on past offer acceptance.",
+      "User frequently shops at Delta Airlines - consider merchant-specific offers.",
+      "Recent travel offer acceptance suggests user responds to category-specific, high-value propositions",
+      "Declining dining spend coincides with competitor enhanced rewards - user may be shifting wallet share",
+      "Historical 60% acceptance rate indicates strong treatment effect potential when offers match priorities"
+    ],
+    "spending_trends": {
+      "total_spend": 4460.0,
+      "transaction_count": 7,
+      "average_transaction": 637.1428571428571,
+      "trend": "decreasing",
+      "trend_percentage": -77.13,
+      "recent_merchants": {
+        "Delta Airlines": 2,
+        "Airbnb": 1,
+        "Enterprise Rent-A-Car": 1,
+        "Hilton Hotels": 1,
+        "United Airlines": 1
+      },
+      "last_transaction_date": "2025-10-30T13:43:16.220962"
+    },
+    "engagement_metrics": {
+      "app_opens_per_month": 25,
+      "offer_click_rate": 0.6666666666666666,
+      "redemption_rate": 0.8333333333333334,
+      "last_login": "2025-11-07T13:43:16.220962",
+      "engagement_level": "high"
+    },
+    "offer_performance": {
+      "total_offers_received": 6,
+      "total_accepted": 4,
+      "acceptance_rate": 66.67,
+      "domain_performance": {
+        "Travel": {
+          "total_offers": 3,
+          "accepted": 3,
+          "acceptance_rate": 100.0
+        },
+        "Dining": {
+          "total_offers": 1,
+          "accepted": 1,
+          "acceptance_rate": 100.0
+        },
+        "Retail": {
+          "total_offers": 1,
+          "accepted": 0,
+          "acceptance_rate": 0.0
+        },
+        "Entertainment": {
+          "total_offers": 1,
+          "accepted": 0,
+          "acceptance_rate": 0.0
+        }
+      },
+      "preferred_domains": [
+        "Travel",
+        "Dining",
+        "Retail"
+      ]
+    }
+  },
+  "applied_policies": [
+    {
+      "id": "travel_offer_policy",
+      "type": "offer",
+      "domain": "Travel"
+    },
+    {
+      "id": "travel_offer_policy",
+      "type": "offer",
+      "domain": "Travel"
+    },
+    {
+      "id": "compliance_policy",
+      "type": "compliance",
+      "domain": "all"
+    },
+    {
+      "id": "frequency_policy",
+      "type": "business_rules",
+      "domain": "all"
+    }
+  ],
+  "offer": {
+    "offer_title": "Reignite Your Travel Adventures",
+    "offer_description": "Earn 5X Membership Rewards points on flights booked through American Express Travel for the next 45 days. That's up to $225 in point value on your typical quarterly travel spend. Perfect timing to explore new destinations or revisit your favorites while maximizing rewards.",
+    "terms_and_conditions": "Offer valid for 45 days from activation. Earn 5X points (instead of standard 1X) on eligible flight bookings. No minimum spend required. Maximum bonus points: 25,000. Points post within 2 billing cycles.",
+    "call_to_action": "Activate your 5X Travel Points offer now and start earning bonus rewards on your next flight!",
+    "offer_type": "points_multiplier",
+    "offer_value": "5X Points (4X bonus)",
+    "expiration_days": 45,
+    "minimum_spend": 0,
+    "category_restrictions": [
+      "flights",
+      "airlines",
+      "hotels",
+      "car_rentals",
+      "vacation_packages"
+    ],
+    "featured_merchants": [
+      {
+        "merchant_name": "Delta Air Lines",
+        "merchant_category": "Airline",
+        "merchant_id": "MERCH_AIRLINES_001",
+        "merchant_type": "online"
+      },
+      {
+        "merchant_name": "Expedia",
+        "merchant_category": "Travel Agency",
+        "merchant_id": "MERCH_TRAVEL_002",
+        "merchant_type": "online"
+      }
+    ],
+    "reasoning": "This Persuadable user requires a compelling high-value offer (5X points vs standard 1X) to overcome their 77.1% spending decline in the Travel category. The 45-day window creates urgency, while the no minimum spend requirement respects their current travel habits. Strategic focus on reversing negative trend through tangible rewards that reactivate dormant travel patterns.",
+    "policy_compliance_notes": [
+      "Points multiplier complies with rewards policy maximum of 5X",
+      "45-day expiration within policy range of 30-60 days"
+    ],
+    "archetype_alignment": {
+      "target_archetype": "Persuadable",
+      "strategy_applied": "High-value offer with urgency to overcome inertia and reverse declining engagement",
+      "expected_incremental_value": "Estimated $1,050 incremental travel spend (43% uplift), generating $42 incremental revenue"
+    },
+    "success": true,
+    "ml_confidence": 0.82,
+    "domain": "Travel",
+    "generated_at": "2025-11-09T13:43:31.609605"
+  },
+  "email_html": "\n        <div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;\">\n            <div style=\"background-color: #006FCF; color: white; padding: 20px; text-align: center;\">\n                <h1 style=\"margin: 0; font-size: 24px;\">Exclusive Offer Just for You</h1>\n            </div>\n            \n            <div style=\"background-color: white; padding: 30px; margin-top: 2px;\">\n                <h2 style=\"color: #006FCF; margin-top: 0;\">Reignite Your Travel Adventures</h2>\n                \n                <div style=\"background-color: #f0f7ff; padding: 15px; border-left: 4px solid #006FCF; margin: 20px 0;\">\n                    <p style=\"font-size: 18px; font-weight: bold; margin: 0; color: #006FCF;\">\n                        5X Points (4X bonus)\n                    </p>\n                </div>\n                \n                <p style=\"font-size: 16px; line-height: 1.6; color: #333;\">\n                    Earn 5X Membership Rewards points on flights booked through American Express Travel for the next 45 days. That's up to $225 in point value on your typical quarterly travel spend. Perfect timing to explore new destinations or revisit your favorites while maximizing rewards.\n                </p>\n                \n                <div style=\"text-align: center; margin: 30px 0;\">\n                    <a href=\"#activate\" style=\"background-color: #006FCF; color: white; padding: 15px 40px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;\">\n                        Activate your 5X Travel Points offer now and start earning bonus rewards on your next flight!\n                    </a>\n                </div>\n                \n                <div style=\"border-top: 1px solid #ddd; padding-top: 20px; margin-top: 20px;\">\n                    <h3 style=\"font-size: 14px; color: #666; margin-bottom: 10px;\">Terms & Conditions:</h3>\n                    <p style=\"font-size: 12px; color: #666; line-height: 1.5;\">\n                        Offer valid for 45 days from activation. Earn 5X points (instead of standard 1X) on eligible flight bookings. No minimum spend required. Maximum bonus points: 25,000. Points post within 2 billing cycles.\n                    </p>\n                    \n                    <p style=\"font-size: 12px; color: #666;\">Valid for: 45 days</p>\n                </div>\n            </div>\n            \n            <div style=\"text-align: center; padding: 20px; font-size: 12px; color: #999;\">\n                <p>American Express®</p>\n                <p>This offer was personalized based on your spending preferences.</p>\n            </div>\n        </div>\n        "
+}
